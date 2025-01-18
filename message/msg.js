@@ -6,9 +6,10 @@
 
 "use strict";
 require('dotenv').config();
-const { downloadMediaMessage } = require("@whiskeysockets/baileys");
+const { downloadContentFromMessage } = require("@whiskeysockets/baileys");
 const { color } = require("../lib/color");
 const fs = require("fs");
+const https = require('https');
 const path = require("path");
 const moment = require("moment-timezone");
 const util = require("util");
@@ -18,11 +19,15 @@ const logger = require("pino");
 const { ytmp4, ytmp3, ttdl, fbdl } = require("ruhend-scraper");
 const insta = require("priyansh-ig-downloader");
 const gifted = require("gifted-dls");
+const imgbb = require("imgbb-uploader");
 
 /**           Gemini AI                */ 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const genAI = new GoogleGenerativeAI("YOUR_APIKEY");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const genAI = new GoogleGenerativeAI("INPUT_YOUR_APIKEY");
+const model = genAI.getGenerativeModel({
+   model: "gemini-1.5-flash",
+   systemInstruction: "Kamu adalah Beruang Grizzly. Bernama Keishu"
+});
 
 moment.tz.setDefault("Asia/Jakarta").locale("id");
 
@@ -34,7 +39,7 @@ module.exports = async (conn, msg, m) => {
 		const messageType = Object.keys(msg.message)[0]
 		const from = msg.key.remoteJid;
 		const msgKey = msg.key
-		const chats = type === "conversation" && msg.message.conversation ? msg.message.conversation : type === "imageMessage" && msg.message.imageMessage.caption ? msg.message.imageMessage.caption : type === "videoMessage" && msg.message.videoMessage.caption ? msg.message.videoMessage.caption : type === "extendedTextMessage" && msg.message.extendedTextMessage.text ? msg.message.extendedTextMessage.text : type === "buttonsResponseMessage" && quotedMsg.fromMe && msg.message.buttonsResponseMessage.selectedButtonId ? msg.message.buttonsResponseMessage.selectedButtonId : type === "templateButtonReplyMessage" && quotedMsg.fromMe && msg.message.templateButtonReplyMessage.selectedId ? msg.message.templateButtonReplyMessage.selectedId : type === "messageContextInfo" ? msg.message.buttonsResponseMessage?.selectedButtonId || msg.message.listResponseMessage?.singleSelectReply.selectedRowId : type == "listResponseMessage" && quotedMsg.fromMe && msg.message.listResponseMessage.singleSelectReply.selectedRowId ? msg.message.listResponseMessage.singleSelectReply.selectedRowId : "";
+		const chats = type === "conversation" && msg.message.conversation ? msg.message.conversation : type === "imageMessage" && msg.message.imageMessage.caption ? msg.message.imageMessage.caption : type === "videoMessage" && msg.message.videoMessage.caption ? msg.message.videoMessage.caption : type === "extendedTextMessage" && msg.message.extendedTextMessage.text ? msg.message.extendedTextMessage.text : msg.message.extendedTextMessage.contextInfo?.quotedMessage.imageMessage && msg.message.extendedTextMessage.contextInfo?.quotedMessage.videoMessage ? msg.message.extendedTextMessage.contextInfo?.quotedMessage.imageMessage : "";
 		const args = chats.split(" ");
 		const command = chats.toLowerCase().split(" ")[0] || "";
 		const isGroup = msg.key.remoteJid.endsWith("@g.us");
@@ -42,19 +47,55 @@ module.exports = async (conn, msg, m) => {
 		const groupName = isGroup ? groupMetadata.subject : ''
 		const sender = isGroup ? msg.key.participant ? msg.key.participant : msg.participant : msg.key.remoteJid;
 		const userId = sender.split("@")[0]
-		const isOwner = ["628xxx@s.whatsapp.net"].includes(sender) ? true : false;
+		const isOwner = ["62xxx@s.whatsapp.net"].includes(sender) ? true : false;
 		const pushname = msg.pushName;
 		const q = chats.slice(command.length + 1, chats.length);
 		const botNumber = conn.user.id.split(":")[0] + "@s.whatsapp.net";
 		const isCmd = chats.startsWith('#')
 		const content = JSON.stringify(msg.message)
 		const isMedia = (messageType === 'imageMessage' || messageType === 'videoMessage')
-		const isQuotedImage = messageType === 'extendedTextMessage' && content.includes('imageMessage')
-		const isQuotedVideo = messageType === 'extendedTextMessage' && content.includes('videoMessage')
+		const isQuotedImage = (messageType === 'extendedTextMessage' || messageType === 'imageMessage') && content.includes('imageMessage')
+		const isQuotedVideo = (messageType === 'extendedTextMessage' || messageType === 'videoMessage') && content.includes('videoMessage')
 		
 		const isUrl = (url) => {
 			return url.match(new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/, 'gi'))
 		}
+		
+		async function downloadAndSaveMediaMessage (type_file, path_file) {
+        	if (type_file === 'image') {
+                var stream = await downloadContentFromMessage(msg.message.imageMessage || msg.message.extendedTextMessage?.contextInfo.quotedMessage.imageMessage, 'image')
+                let buffer = Buffer.from([])
+                for await(const chunk of stream) {
+                	buffer = Buffer.concat([buffer, chunk])
+                }
+                fs.writeFileSync(path_file, buffer)
+                return path_file
+        	} else if (type_file === 'video') {
+                var stream = await downloadContentFromMessage(msg.message.videoMessage || msg.message.extendedTextMessage?.contextInfo.quotedMessage.videoMessage, 'video')
+                let buffer = Buffer.from([])
+                for await(const chunk of stream) {
+                	buffer = Buffer.concat([buffer, chunk])
+                }
+                fs.writeFileSync(path_file, buffer)
+                return path_file
+        	} else if (type_file === 'sticker') {
+                var stream = await downloadContentFromMessage(msg.message.stickerMessage || msg.message.extendedTextMessage?.contextInfo.quotedMessage.stickerMessage, 'sticker')
+                let buffer = Buffer.from([])
+                for await(const chunk of stream) {
+                	buffer = Buffer.concat([buffer, chunk])
+                }
+                fs.writeFileSync(path_file, buffer)
+                return path_file
+        	} else if (type_file === 'audio') {
+                var stream = await downloadContentFromMessage(msg.message.audioMessage || msg.message.extendedTextMessage?.contextInfo.quotedMessage.audioMessage, 'audio')
+                let buffer = Buffer.from([])
+                for await(const chunk of stream) {
+                	buffer = Buffer.concat([buffer, chunk])
+                }
+                fs.writeFileSync(path_file, buffer)
+                return path_file
+        	}
+        }
 		
 		const reply = (teks) => {
 			conn.sendMessage(from, { text: teks }, { quoted: msg });
@@ -74,7 +115,10 @@ module.exports = async (conn, msg, m) => {
 			conn.sendMessage(from, reactMsg)
 		}
 		
-			
+		const getRandom = (ext) => {
+			return `${Math.floor(Math.random() * 10000)}${ext}`
+		}
+		
 		conn.readMessages([msg.key]);
 		conn.sendPresenceUpdate("available", from);
 		
@@ -132,7 +176,7 @@ _Media yang di privasi, tidak dapat di unduh._
 				    conn.sendMessage(from, {video: {url: v.video}}, {quoted: msg})
 				  }
 				}
-				}).catch(e => reply('Maaf terjadi kesalahan, sistem error atau link yang dikirimkan tidak benar.'))
+				}).catch(e => console.log(e), reply('Maaf terjadi kesalahan, sistem error atau link yang dikirimkan tidak benar.'))
 				break
 			case '#twtdl':
 			case '#xdl':
@@ -204,18 +248,58 @@ _Media yang di privasi, tidak dapat di unduh._
 				}
 				break
 		default:
-			if (!chats) return
 			if (isGroup) return // tidak dapat digunakan didalam grup
-			if (!['conversation', 'extendedTextMessage'].includes(msg.type)) return reply(`Maaf, aku hanya menerima pesan teks!`)
+			// if (!['conversation', 'extendedTextMessage'].includes(msg.type)) return reply(`Maaf, aku hanya menerima pesan teks!`)
 			console.log("->[\x1b[1;32mNew\x1b[1;37m]", color('Question From', 'yellow'), color(pushname, 'lightblue'), `: "${chats}"`)
 			conn.sendPresenceUpdate("composing", from);
 			try {
-			    const response = await model.generateContent(chats);
-			    reply(response.response.text())
-			    reactMessage("❤️")
+				/*
+				* @febbyadityan
+				* please include the source if you want to copy this code.
+				* http://github.com/FebbAdityaN
+				*/
+				conn.gemini[sender] ? conn.gemini[sender] : conn.gemini[sender] = {}
+				conn.gemini[sender].history ? conn.gemini[sender].history : conn.gemini[sender].history = []
+				const caption = msg.message.imageMessage?.caption ? msg.message.imageMessage.caption : "";
+				if (isQuotedImage) {
+					const ran = getRandom('.jpg')
+					const media = await downloadAndSaveMediaMessage("image", `./lib/${ran}`)
+					const img = await imgbb("INPUT_YOUR_APIKEY", `./lib/${ran}`)
+					const imgData = img.display_url.split(/\//);
+					const imageResp = await fetch(`https://i.ibb.co.com/${imgData[3]}/${imgData[4]}`).then((response) => response.arrayBuffer());
+					await new Promise(r => setTimeout(r, 3000));
+					const result = await model.generateContent([
+						{
+							inlineData: {
+								data: Buffer.from(imageResp).toString("base64"),
+								mimeType: "image/jpeg",
+							},
+						},
+						caption
+					]);
+					reply(result.response.text().trim())
+					fs.unlinkSync(media)
+					return reactMessage("❤️")
+				} else {
+					const chat = model.startChat(conn.gemini[sender])
+					let resdata = await chat.sendMessage(chats);
+					conn.gemini[sender].history.push({
+						role: "user",
+						parts: [{
+							text: chats
+						}]
+					}, {
+						role: "model",
+						parts: [{
+							text: resdata.response.text().trim()
+						}]
+					})
+					reply(resdata.response.text().trim());
+					return reactMessage("❤️")
+				}
 			} catch(e) {
-			    console.log(e)
-			    reply("Server error, coba lain waktu:(")
+				console.log(e)
+				reply("Server error, coba lain waktu:(")
 			}
 			break
     }
