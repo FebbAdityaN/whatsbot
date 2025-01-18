@@ -26,7 +26,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI("INPUT_YOUR_APIKEY");
 const model = genAI.getGenerativeModel({
    model: "gemini-1.5-flash",
-   systemInstruction: "Kamu adalah Beruang Grizzly. Bernama Keishu"
+   systemInstruction: "Kamu adalah seorang Asisten. Bernama Keishu"
 });
 
 moment.tz.setDefault("Asia/Jakarta").locale("id");
