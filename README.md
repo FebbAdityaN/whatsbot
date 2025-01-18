@@ -18,23 +18,20 @@ $ cd whatsbot
 $ npm i
 $ npm start
 
-Masukan Pairing Code 🕺🏻
-(Tanpa QR, ini yang kalian cari?)
+Masukan Pairing Code 
 ```
 ## NOTES
 * Setting Nomor Owner [`Setting`](https://github.com/FebbAdityaN/whatsbot/blob/3a805f25329e6c4201079d2453b69b2b49e86661/message/msg.js#L45)
 * Setting Gemini apiKey [`Setting`](https://github.com/FebbAdityaN/whatsbot/blob/3a805f25329e6c4201079d2453b69b2b49e86661/message/msg.js#L24)
+* Setting Imgbb apiKey [`Setting`]
 * Get Gemini apiKey [`apiKey`](https://ai.google.dev/gemini-api/docs/api-key?hl=id)
-## BUG/ERROR
-Terkadang pairing code tidak muncul, kamu dapat menghapus folder sesi untuk memulai ulang.
-```cmd
-$ ls
-Jika terdapat folder "sessions" kamu dapat menghapusnya dengan cara berikut:
-$ rm -r sessions
-Kemudian coba lagi sampai mendapatkan pairing code nya.
-```
-### DONASI
+* Get Imgbb apiKey [`apiKey`](https://api.imgbb.com/)
+## LOG UPDATE
+* Untuk fitur Instagram Downloader belum dapat digunakan.
+* Gemini AI dapat melakukan percakapan chat dan dapat menganalisis Gambar
+## DONASI
 * DANA/GOPAY : 085770269605
 ## SPECIAL THANKS TO
 * <a href="https://github.com/whiskeysockets/Baileys"><img alt="GitHub" src="https://img.shields.io/badge/baileys-%23121011.svg?&style=for-the-badge&logo=github&logoColor=white"/></a>
 * <a href="https://github.com/rtwone"><img alt="GitHub" src="https://img.shields.io/badge/rtwone-%23121011.svg?&style=for-the-badge&logo=github&logoColor=white"/></a>
+* <a href="https://github.com/rzkydevv"><img alt="GitHub" src="https://img.shields.io/badge/rzkydevv-%23121011.svg?&style=for-the-badge&logo=github&logoColor=white"/></a>
