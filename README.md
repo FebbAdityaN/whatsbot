@@ -27,8 +27,10 @@ Masukan Pairing Code
 * Get Gemini apiKey [`apiKey`](https://ai.google.dev/gemini-api/docs/api-key?hl=id)
 * Get Imgbb apiKey [`apiKey`](https://api.imgbb.com/)
 ## LOG UPDATE
+```cmd
 * Untuk fitur Instagram Downloader belum dapat digunakan.
 * Gemini AI dapat melakukan percakapan chat dan dapat menganalisis Gambar
+```
 ## DONASI
 * DANA/GOPAY : 085770269605
 ## SPECIAL THANKS TO
